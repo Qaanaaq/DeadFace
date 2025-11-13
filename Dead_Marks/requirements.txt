@@ -1,10 +1,8 @@
 mediapipe>=0.10.14
 numpy
 opencv-python
-
 transforms3d
 picamera2
-libcamera
 customtkinter
 requests
 Pillow
