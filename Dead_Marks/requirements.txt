@@ -1,5 +1,10 @@
+mediapipe>=0.10.14
 numpy
-timecode
-mediapipe
+opencv-python
+
 transforms3d
-pyinstaller
+picamera2
+libcamera
+customtkinter
+requests
+Pillow
