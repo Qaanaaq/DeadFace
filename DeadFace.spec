@@ -4,25 +4,23 @@ from pathlib import Path
 
 block_cipher = None
 
-# Project paths
-# In PyInstaller spec execution, __file__ is not always defined the way we expect,
-# but pyinstaller runs from the project root, so Path.cwd() is fine here.
+# Use current working directory as project root (works fine for pyinstaller DeadFace.spec)
 project_root = Path.cwd()
 dead_marks = project_root / "Dead_Marks"
 
 # Data files to include next to the executable.
-# These are accessed at runtime by simple filenames like "DeadFace.task" or
-# "sky_dark_theme.json", so we copy them to "." in the bundle.
 datas = [
-    (str(dead_marks / "DeadFace.task"), "."),          # Mediapipe model
-    (str(dead_marks / "sky_dark_theme.json"), "."),    # CustomTkinter theme (if present)
-    # If you have other JSONs you want pre-bundled, uncomment/add here:
+    # Mediapipe model
+    (str(dead_marks / "DeadFace.task"), "."),
+    # CustomTkinter theme (if you have it in Dead_Marks)
+    (str(dead_marks / "sky_dark_theme.json"), "."),
+    # If you later want to bundle these, uncomment:
     # (str(dead_marks / "neutral_pose.json"), "."),
     # (str(dead_marks / "multipliers.json"), "."),
 ]
 
 a = Analysis(
-    ['Dead_Marks/dual_app.py'],   # main entry script
+    ['Dead_Marks/dual_app.py'],   # <-- main entry script
     pathex=[str(project_root)],
     binaries=[],
     datas=datas,
@@ -53,11 +51,12 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,      # set to True if you want a console window
+    console=False,      # set True if you want a console window for debugging
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=str(dead_marks / "deadface.ico"),   # <-- ICON ADDED HERE
 )
 
 coll = COLLECT(
