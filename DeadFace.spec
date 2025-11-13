@@ -22,7 +22,7 @@ datas = [
 ]
 
 a = Analysis(
-    ['Dead_Marks/dual_app.py'],,   # main entry script
+    ['Dead_Marks/dual_app.py'],   # main entry script
     pathex=[str(project_root)],
     binaries=[],
     datas=datas,
