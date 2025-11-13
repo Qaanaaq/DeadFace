@@ -1,0 +1,110 @@
+========================================
+ DeadFace / RPi Headless Tracking Setup
+========================================
+
+----------------------------------------
+1. Run headless tracker on each Raspberry Pi
+----------------------------------------
+
+General command:
+
+    python main_headless_picam.py \
+        --udp-address <PC_IP> \
+        --udp-port <STREAM_PORT> \
+        --width 320 \
+        --height 240 \
+        --fps 15 \
+        --snapshot-port 8000
+
+Example for RPi #1:
+
+    python main_headless_picam.py \
+        --udp-address 192.168.0.16 \
+        --udp-port 11111 \
+        --width 320 \
+        --height 240 \
+        --fps 15 \
+        --snapshot-port 8000
+
+Example for RPi #2:
+
+    python main_headless_picam.py \
+        --udp-address 192.168.0.16 \
+        --udp-port 11112 \
+        --width 320 \
+        --height 240 \
+        --fps 15 \
+        --snapshot-port 8000
+
+Example for RPi #3:
+
+    python main_headless_picam.py \
+        --udp-address 192.168.0.16 \
+        --udp-port 11113 \
+        --width 320 \
+        --height 240 \
+        --fps 15 \
+        --snapshot-port 8000
+
+
+----------------------------------------
+2. Run Receiver Studio (Windows / PC)
+----------------------------------------
+
+    python receiver_studio.py
+
+Forwarding:
+  Stream 1 → 11121
+  Stream 2 → 11122
+  Stream 3 → 11123
+
+Snapshot URLs configured inside receiver_studio.py:
+  Stream 1 → http://<RPi1_IP>:8000/snapshot.jpg
+  Stream 2 → http://<RPi2_IP>:8000/snapshot.jpg
+  Stream 3 → http://<RPi3_IP>:8000/snapshot.jpg
+
+
+----------------------------------------
+3. Optional: Run UDP diagnostic tool
+----------------------------------------
+
+This prints incoming packets + estimated FPS.
+
+Basic usage:
+
+    python udp_receiver_diag.py --port <PORT>
+
+Example:
+
+    python udp_receiver_diag.py --port 11121
+
+
+----------------------------------------
+4. Tip: Check RPi IP address
+----------------------------------------
+
+    hostname -I
+
+Use this address for snapshot URLs in receiver_studio.py.
+
+
+----------------------------------------
+5. Tip: Stop a running RPi tracker
+----------------------------------------
+
+Press:
+    CTRL + C
+
+
+----------------------------------------
+6. Tip: Rotate snapshot if needed
+----------------------------------------
+
+main_headless_picam.py rotates snapshot 90° CCW by default using:
+
+    rotated = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+Change rotate mode here if necessary.
+
+
+========================================

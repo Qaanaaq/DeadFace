@@ -1,0 +1,22 @@
+# Python build junk
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+env/
+
+# Editor/OS files
+.DS_Store
+.idea/
+.vscode/
+
+# Picamera / Mediapipe temp images
+*.jpg
+*.png
+
+# Logs
+*.log
+*.tmp
+
+Dead_Marks/bakup/
