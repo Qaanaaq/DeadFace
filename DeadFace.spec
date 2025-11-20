@@ -4,8 +4,10 @@ from pathlib import Path
 
 block_cipher = None
 
-# Use the folder where the spec lives as the project root
-project_root = Path(__file__).parent
+# Use the current working directory as project root.
+# In CI and locally you run `pyinstaller DeadFace.spec` from the repo root,
+# so this will be correct.
+project_root = Path.cwd()
 dead_marks = project_root / "Dead_Marks"
 
 # All runtime data files you want shipped with the app
