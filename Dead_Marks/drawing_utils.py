@@ -6,6 +6,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_styles = mp.solutions.drawing_styles
 mp_face_mesh = mp.solutions.face_mesh
 
+
 # Draw face landmarks on an RGB image
 def draw_landmarks_on_image(rgb_image, detection_result):
     face_landmarks_list = detection_result.face_landmarks
@@ -19,26 +20,29 @@ def draw_landmarks_on_image(rgb_image, detection_result):
             ) for lm in face_landmarks
         ])
 
+        tesselation_style = mp_styles.get_default_face_mesh_tesselation_style()
         mp_drawing.draw_landmarks(
             image=annotated_image,
             landmark_list=face_landmarks_proto,
             connections=mp_face_mesh.FACEMESH_TESSELATION,
             landmark_drawing_spec=None,
-            connection_drawing_spec=mp_styles.get_default_face_mesh_tesselation_style()
+            connection_drawing_spec=tesselation_style
         )
+        contours_style = mp_styles.get_default_face_mesh_contours_style()
         mp_drawing.draw_landmarks(
             image=annotated_image,
             landmark_list=face_landmarks_proto,
             connections=mp_face_mesh.FACEMESH_CONTOURS,
             landmark_drawing_spec=None,
-            connection_drawing_spec=mp_styles.get_default_face_mesh_contours_style()
+            connection_drawing_spec=contours_style
         )
+        iris_style = mp_styles.get_default_face_mesh_iris_connections_style()
         mp_drawing.draw_landmarks(
             image=annotated_image,
             landmark_list=face_landmarks_proto,
             connections=mp_face_mesh.FACEMESH_IRISES,
             landmark_drawing_spec=None,
-            connection_drawing_spec=mp_styles.get_default_face_mesh_iris_connections_style()
+            connection_drawing_spec=iris_style
         )
 
     return annotated_image
