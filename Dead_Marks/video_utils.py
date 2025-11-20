@@ -32,9 +32,13 @@ def format_timecode(frame_index, frame_rate):
     minutes = int((frame_timestamp_ms / (1000 * 60)) % 60)
     hours = int(frame_timestamp_ms / (1000 * 60 * 60))
     frame_index_formatted = int(frame_index % 1000)
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d}:{milliseconds:02}.{frame_index_formatted:03d}"
+    return (
+        f"{hours:02d}:{minutes:02d}:{seconds:02d}:{milliseconds:02}.{frame_index_formatted:03d}"
+    )
+
 
 # Generate output CSV path
+
 def get_output_csv_path(file_path):
     base, _ = os.path.splitext(file_path)
     return base + "_blendshape_data.csv"
