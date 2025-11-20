@@ -18,7 +18,7 @@ I am a visual artist, and coding is only a means to achieve results i need, lot 
 
 # DOCUMENTATION
 
-<h2 id="video-mode">📹 Video Mode</h2>
+<h2 id="video-mode">Video Mode</h2>
 
 <!-- Image for Video Mode -->
 <p>
@@ -71,7 +71,7 @@ I am a visual artist, and coding is only a means to achieve results i need, lot 
 
 <hr>
 
-<h2 id="stream-mode">📡 Stream Mode</h2>
+<h2 id="stream-mode">Stream Mode</h2>
 
 <!-- Image for Stream Mode -->
 <p>
