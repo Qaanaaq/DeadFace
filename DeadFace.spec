@@ -4,23 +4,23 @@ from pathlib import Path
 
 block_cipher = None
 
-# Use current working directory as project root (works fine for pyinstaller DeadFace.spec)
-project_root = Path.cwd()
+# Use the folder where the spec lives as the project root
+project_root = Path(__file__).parent
 dead_marks = project_root / "Dead_Marks"
 
-# Data files to include next to the executable.
+# All runtime data files you want shipped with the app
 datas = [
-    # Mediapipe model
     (str(dead_marks / "DeadFace.task"), "."),
-    # CustomTkinter theme (if you have it in Dead_Marks)
     (str(dead_marks / "sky_dark_theme.json"), "."),
-    # If you later want to bundle these, uncomment:
-    # (str(dead_marks / "neutral_pose.json"), "."),
-    # (str(dead_marks / "multipliers.json"), "."),
+    (str(dead_marks / "multipliers.json"), "."),
+    (str(dead_marks / "neutral_pose.json"), "."),
+    (str(dead_marks / "deadface.png"), "."),
+    (str(dead_marks / "deadface.ico"), "."),   # optional, as file in dist
+    (str(dead_marks / "commands.txt"), "."),
 ]
 
 a = Analysis(
-    ['Dead_Marks/dual_app.py'],   # <-- main entry script
+    ['Dead_Marks/dual_app.py'],   # <-- main app
     pathex=[str(project_root)],
     binaries=[],
     datas=datas,
@@ -31,32 +31,31 @@ a = Analysis(
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
+    cipher=block_cipher,
 )
 
-pyz = PYZ(
-    a.pure,
-    a.zipped_data,
-    cipher=block_cipher,
-)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
     [],
-    exclude_binaries=True,
     name='DeadFace',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,      # set True if you want a console window for debugging
+    console=False,  # GUI app
     disable_windowed_traceback=False,
+    argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(dead_marks / "deadface.ico"),   # <-- ICON ADDED HERE
+    icon=str(dead_marks / "deadface.ico"),  # this sets the exe icon
 )
 
 coll = COLLECT(

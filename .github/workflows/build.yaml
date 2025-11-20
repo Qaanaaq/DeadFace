@@ -12,153 +12,67 @@ permissions:
   contents: read
 
 jobs:
-  build_linux:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux
+          - os: windows-latest
+            label: windows
+          - os: macos-latest
+            label: macos
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repo
+        uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8
-          pip install -r Dead_Marks/requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pyinstaller
 
-      - name: Build DeadFace (Linux)
+      - name: Build with PyInstaller
         run: |
           pyinstaller DeadFace.spec
 
-      - name: Zip files
-        uses: thedoctor0/zip-release@0.7.5
-        with:
-          type: zip
-          filename: DeadFace_linux.zip
-          path: dist/DeadFace
+      - name: Package zip
+        run: |
+          cd dist
+          zip -r DeadFace_${{ matrix.label }}.zip DeadFace
+        shell: bash
 
-      - name: Archive production artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build_artifact_linux
-          path: DeadFace_linux.zip
-
-  build_windows:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-          pip install -r Dead_Marks/requirements.txt
-          pip install pyinstaller
-
-      - name: Build DeadFace (Windows)
-        run: |
-          pyinstaller DeadFace.spec
-
-      - name: Zip files
-        uses: thedoctor0/zip-release@0.7.5
-        with:
-          type: zip
-          filename: DeadFace_windows.zip
-          path: dist/DeadFace
-
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build_artifact_windows
-          path: DeadFace_windows.zip
-
-  build_macos:
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-          pip install -r Dead_Marks/requirements.txt
-          pip install pyinstaller
-
-      - name: Build DeadFace (macOS)
-        run: |
-          pyinstaller DeadFace.spec
-
-      - name: Zip files
-        uses: thedoctor0/zip-release@0.7.5
-        with:
-          type: zip
-          filename: DeadFace_macos.zip
-          path: dist/DeadFace
-
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build_artifact_macos
-          path: DeadFace_macos.zip
+          name: DeadFace_${{ matrix.label }}
+          path: dist/DeadFace_${{ matrix.label }}.zip
 
   release:
-    name: Release pushed tag
+    needs: build
+    runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-22.04
-    needs: [ build_linux, build_macos, build_windows ]
-    permissions:
-      contents: write
 
     steps:
-      - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
-        run: |
-          gh release create "$tag" \
-            --repo="$GITHUB_REPOSITORY" \
-            --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
-            --generate-notes
-
-      - name: Download Windows artifacts
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build_artifact_windows
+          path: ./artifacts
 
-      - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build_artifact_linux
+      - name: List downloaded files
+        run: ls -R ./artifacts
 
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build_artifact_macos
-
-      - name: Display structure of downloaded files
-        run: ls -R
-        working-directory: .
-
-      - name: Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            DeadFace_windows.zip
-            DeadFace_linux.zip
-            DeadFace_macos.zip
+            artifacts/DeadFace_windows/DeadFace_windows.zip
+            artifacts/DeadFace_linux/DeadFace_linux.zip
+            artifacts/DeadFace_macos/DeadFace_macos.zip
