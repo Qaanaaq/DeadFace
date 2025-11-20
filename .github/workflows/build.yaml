@@ -45,10 +45,16 @@ jobs:
           pyinstaller DeadFace.spec
 
       - name: Package zip
-        run: |
-          cd dist
-          zip -r DeadFace_${{ matrix.label }}.zip DeadFace
         shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            echo "Zipping on Windows"
+            powershell -Command "Compress-Archive -Path dist/DeadFace -DestinationPath dist/DeadFace_${{ matrix.label }}.zip"
+          else
+            echo "Zipping on Linux/macOS"
+            cd dist
+            zip -r DeadFace_${{ matrix.label }}.zip DeadFace
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
