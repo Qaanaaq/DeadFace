@@ -41,12 +41,11 @@ jobs:
           pip install pyinstaller
 
       - name: Lint with flake8 (non-blocking)
-        run: |
-          flake8 Dead_Marks || echo "Lint warnings ignored for now"
+        run: flake8 Dead_Marks
+        continue-on-error: true
 
       - name: Build with PyInstaller
-        run: |
-          pyinstaller DeadFace.spec
+        run: pyinstaller DeadFace.spec
 
       # Zip artifacts on Linux & macOS using `zip`
       - name: Package zip (Linux/macOS)
@@ -88,5 +87,4 @@ jobs:
             artifacts/DeadFace_windows/*.zip
             artifacts/DeadFace_linux/*.zip
             artifacts/DeadFace_macos/*.zip
-          # Personal Access Token with `repo` scope, stored as a repo secret
           token: ${{ secrets.RELEASE_TOKEN }}
