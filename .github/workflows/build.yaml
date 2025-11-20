@@ -82,4 +82,4 @@ jobs:
             artifacts/DeadFace_windows/*.zip
             artifacts/DeadFace_linux/*.zip
             artifacts/DeadFace_macos/*.zip
-          token: ${{ secrets.RELEASE_TOKEN }}
+          
