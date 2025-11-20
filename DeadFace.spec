@@ -1,29 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-from pathlib import Path
-
 block_cipher = None
 
-# Use the current working directory as project root.
-# In CI and locally you run `pyinstaller DeadFace.spec` from the repo root,
-# so this will be correct.
-project_root = Path.cwd()
-dead_marks = project_root / "Dead_Marks"
-
-# All runtime data files you want shipped with the app
+# List all the extra data files we want to ship next to the exe
 datas = [
-    (str(dead_marks / "DeadFace.task"), "."),
-    (str(dead_marks / "sky_dark_theme.json"), "."),
-    (str(dead_marks / "multipliers.json"), "."),
-    (str(dead_marks / "neutral_pose.json"), "."),
-    (str(dead_marks / "deadface.png"), "."),
-    (str(dead_marks / "deadface.ico"), "."),   # optional, as file in dist
-    (str(dead_marks / "Commands.txt"), "."),
+    ("Dead_Marks/DeadFace.task", "."),
+    ("Dead_Marks/sky_dark_theme.json", "."),
+    ("Dead_Marks/multipliers.json", "."),
+    ("Dead_Marks/neutral_pose.json", "."),
+    ("Dead_Marks/deadface.png", "."),
+    ("Dead_Marks/deadface.ico", "."),
+    ("Dead_Marks/Commands.txt", "."),
 ]
 
 a = Analysis(
-    ['Dead_Marks/dual_app.py'],   # <-- main app
-    pathex=[str(project_root)],
+    ["Dead_Marks/dual_app.py"],   # main app
+    pathex=["."],
     binaries=[],
     datas=datas,
     hiddenimports=[],
@@ -31,13 +23,14 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
     noarchive=False,
-    cipher=block_cipher,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(
+    a.pure,
+    a.zipped_data,
+    cipher=block_cipher,
+)
 
 exe = EXE(
     pyz,
@@ -46,18 +39,18 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='DeadFace',
+    name="DeadFace",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,  # GUI app
+    console=False,  # GUI app, no console window
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(dead_marks / "deadface.ico"),  # this sets the exe icon
+    icon="Dead_Marks/deadface.ico",  # exe icon
 )
 
 coll = COLLECT(
@@ -68,5 +61,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='DeadFace',
+    name="DeadFace",
 )
