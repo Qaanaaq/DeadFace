@@ -30,36 +30,36 @@ I am a visual artist, and coding is only a means to achieve results i need, lot 
   Use this mode for offline analysis, testing, or generating clean neutral poses from hand-picked frames.
 </p>
 
-<h3>🟦 Load Video</h3>
+<h3>Load Video</h3>
 <p>
   <strong>Load Video</strong><br>
   Opens a file picker to load an <code>.mp4</code>, <code>.avi</code>, <code>.mov</code>, or <code>.mkv</code> file into the app.
 </p>
 
-<h3>🟦 Start Tracking / Stop Tracking</h3>
+<h3>Start Tracking / Stop Tracking</h3>
 <p>
   Begins processing the video and computing blendshapes. While running, the frame scrubber updates automatically.
   Press again to stop.
 </p>
 
-<h3>🟦 Timeline Scrubber</h3>
+<h3>Timeline Scrubber</h3>
 <p>
   Lets you manually jump to any frame in the video. The label beneath shows:<br>
   <code>currentTime / totalTime (frameNumber / totalFrames)</code>
 </p>
 
-<h3>🟦 Set Neutral (Video)</h3>
+<h3>Set Neutral (Video)</h3>
 <p>
   Extracts a <em>neutral facial pose</em> from the <strong>current frame</strong> on the slider.
   Useful for customizing how expressions are interpreted compared to your personal resting face.
 </p>
 
-<h3>🟦 Zero</h3>
+<h3>Zero</h3>
 <p>
   Resets all neutral-pose values back to defaults (an empty/zero file).
 </p>
 
-<h3>🟦 Head / Eye Options</h3>
+<h3>Head / Eye Options</h3>
 <p>
   <strong>Enable Head Tracking</strong><br>
   Enables estimation of head rotation and orientation from the video. Turn this off if you want only blendshape extraction.
@@ -83,32 +83,32 @@ I am a visual artist, and coding is only a means to achieve results i need, lot 
   (e.g. Unreal, Unity, Blender, custom tools).
 </p>
 
-<h3>🟧 Test Cam / Stop Cam</h3>
+<h3>Test Cam / Stop Cam</h3>
 <p>
   Shows a raw camera preview to confirm the camera is working before streaming.
   Does not process blendshapes—just a visual test.
 </p>
 
-<h3>🟧 Start Streaming / Stop Streaming</h3>
+<h3>Start Streaming / Stop Streaming</h3>
 <p>
   Starts sending real-time head and facial blendshape data over UDP.
   Uses the IP and port you enter in the fields below.
 </p>
 
-<h3>🟧 Set Neutral Pose</h3>
+<h3>Set Neutral Pose</h3>
 <p>
   Captures your <em>current live face</em> as the neutral reference for the streaming mode.
   Useful if your relaxed mouth/eyes differ from the default assumptions.
 </p>
 
-<h3>🟧 Zero (Stream)</h3>
+<h3>Zero (Stream)</h3>
 <p>
   Clears the neutral pose file and resets all stored neutral calibration.
 </p>
 
 <hr>
 
-<h2 id="advanced-controls">🎛️ Advanced Expression Controls</h2>
+<h2 id="advanced-controls">Advanced Expression Controls</h2>
 <p>
   These settings appear in <strong>Stream Mode</strong> and allow fine-tuning of all blendshape outputs.
 </p>
@@ -127,13 +127,12 @@ I am a visual artist, and coding is only a means to achieve results i need, lot 
 
 <h3>Improved Shapes</h3>
 <p>
-  A toggle for an enhanced blendshape correction system (feature placeholder in the current build).
-  Disabled in video mode.
+  A toggle for an enhanced blendshape correction system (feature placeholder in the current build). Mouth closed, mout pucker and nose sneer are not well recorded in mediapipe, I wish to create a solution for this in the future. 
 </p>
 
 <hr>
 
-<h2 id="advanced-multipliers">🎚️ Advanced Expression Multipliers</h2>
+<h2 id="advanced-multipliers">Advanced Expression Multipliers</h2>
 <p>
   Inside the expandable panel (“Show Advanced”), you can individually adjust the strength of each blendshape.
 </p>
