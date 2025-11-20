@@ -11,7 +11,7 @@ i gave this a lot of free time, after 10 000 downloads of my previous script, i 
 
 Also some of you have reported the antivirus flagging - that is because for an indy-developer i would need to purchase certtificates so that the .executable gets certified. Also because of the previous paragraph, that is not viable for me.  BUT if you are interested i can put a tutorial together how to build it with pyinstaller from source code. (some coffee would help motivation)
 
-<img src="https://i.imgur.com/Ax1ryAC.png">
+<img src="https://i.imgur.com/Q23EHLr.png">
 
 
 I am a visual artist, and coding is only a means to achieve results i need, lot of the code was aided by ChatGPT, some of the code is directly used from https://github.com/JimWest and his MeFaMo, and PyLiveLinkFace
