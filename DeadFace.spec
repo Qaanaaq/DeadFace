@@ -9,7 +9,7 @@ datas = [
     ("Dead_Marks/neutral_pose.json", "."),
     ("Dead_Marks/deadface.png", "."),
     ("Dead_Marks/deadface.ico", "."),
-    ("Dead_Marks/commands.txt", "."),
+    ("Dead_Marks/Commands.txt", "."),
 ]
 
 a = Analysis(
