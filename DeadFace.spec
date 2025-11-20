@@ -18,7 +18,7 @@ datas = [
     (str(dead_marks / "neutral_pose.json"), "."),
     (str(dead_marks / "deadface.png"), "."),
     (str(dead_marks / "deadface.ico"), "."),   # optional, as file in dist
-    (str(dead_marks / "commands.txt"), "."),
+    (str(dead_marks / "Commands.txt"), "."),
 ]
 
 a = Analysis(
