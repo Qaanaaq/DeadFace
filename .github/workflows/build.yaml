@@ -42,13 +42,13 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller DeadFace.spec
 
-      # Windows-only: move data files out of .internal so they sit next to DeadFace.exe
+      # Windows-only: move data files out of _internal so they sit next to DeadFace.exe
       - name: Fix Windows data layout
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $base = "dist/DeadFace"
-          $internal = Join-Path $base ".internal"
+          $internal = Join-Path $base "_internal"
           $files = @(
             "DeadFace.task",
             "sky_dark_theme.json",
