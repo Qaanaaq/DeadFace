@@ -67,7 +67,7 @@ jobs:
           name: DeadFace_${{ matrix.label }}
           path: dist/DeadFace_${{ matrix.label }}.zip
 
-    release:
+  release:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
