@@ -2,7 +2,6 @@
 
 block_cipher = None
 
-# List all the extra data files we want to ship next to the exe
 datas = [
     ("Dead_Marks/DeadFace.task", "."),
     ("Dead_Marks/sky_dark_theme.json", "."),
@@ -10,12 +9,12 @@ datas = [
     ("Dead_Marks/neutral_pose.json", "."),
     ("Dead_Marks/deadface.png", "."),
     ("Dead_Marks/deadface.ico", "."),
-    ("Dead_Marks/Commands.txt", "."),
+    ("Dead_Marks/commands.txt", "."),
 ]
 
 a = Analysis(
-    ["Dead_Marks/dual_app.py"],   # main app
-    pathex=["."],
+    ['Dead_Marks/dual_app.py'],
+    pathex=['.'],
     binaries=[],
     datas=datas,
     hiddenimports=[],
@@ -23,43 +22,27 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    noarchive=False,
 )
 
-pyz = PYZ(
-    a.pure,
-    a.zipped_data,
-    cipher=block_cipher,
-)
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# This EXE is ONLY used inside COLLECT — not written to dist/
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
-    name="DeadFace",
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    console=False,  # GUI app, no console window
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    icon="Dead_Marks/deadface.ico",  # exe icon
+    exclude_binaries=True,    # <--- THIS PREVENTS the outer EXE file
+    name='DeadFaceApp',
+    console=False,
+    icon='Dead_Marks/deadface.ico',
 )
 
+# This is the ONLY output you care about
 coll = COLLECT(
     exe,
     a.binaries,
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="DeadFace",
+    name='DeadFace'
 )
