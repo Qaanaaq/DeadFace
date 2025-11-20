@@ -42,6 +42,30 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller DeadFace.spec
 
+      # Windows-only: move data files out of .internal so they sit next to DeadFace.exe
+      - name: Fix Windows data layout
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $base = "dist/DeadFace"
+          $internal = Join-Path $base ".internal"
+          $files = @(
+            "DeadFace.task",
+            "sky_dark_theme.json",
+            "multipliers.json",
+            "neutral_pose.json",
+            "deadface.png",
+            "deadface.ico",
+            "Commands.txt"
+          )
+          foreach ($f in $files) {
+            $src = Join-Path $internal $f
+            $dst = Join-Path $base $f
+            if (Test-Path $src) {
+              Copy-Item $src $dst -Force
+            }
+          }
+
       # Zip artifacts on Linux & macOS using `zip`
       - name: Package zip (Linux/macOS)
         if: runner.os != 'Windows'
@@ -78,8 +102,5 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            artifacts/DeadFace_windows/*.zip
-            artifacts/DeadFace_linux/*.zip
-            artifacts/DeadFace_macos/*.zip
-          
+          files: artifacts/**/*.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
