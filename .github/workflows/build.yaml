@@ -9,7 +9,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: write   # needed so the release job can create GitHub releases
+  contents: write   # required so the release job can create GitHub releases
 
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
           pip install -r Dead_Marks/requirements.txt
           pip install pyinstaller
 
-      - name: Lint with flake8
+      - name: Lint with flake8 (non-blocking)
         run: |
           flake8 Dead_Marks || echo "Lint warnings ignored for now"
 
@@ -88,5 +88,5 @@ jobs:
             artifacts/DeadFace_windows/*.zip
             artifacts/DeadFace_linux/*.zip
             artifacts/DeadFace_macos/*.zip
+          # Personal Access Token with `repo` scope, stored as a repo secret
           token: ${{ secrets.RELEASE_TOKEN }}
-
