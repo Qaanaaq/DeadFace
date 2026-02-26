@@ -20,6 +20,9 @@ env/
 *.tmp
 
 Dead_Marks/bakup/
+DeadFace_multi.spec
+
+
 
 !Video mode.png
 !Stream mode.png
