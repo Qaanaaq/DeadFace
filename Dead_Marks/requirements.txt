@@ -1,4 +1,4 @@
-mediapipe>=0.10.14
+mediapipe==0.10.11
 numpy==1.26.2
 opencv-python
 transforms3d
