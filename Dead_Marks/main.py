@@ -85,45 +85,45 @@ def run_tracking(video_path, head_tracking=True, symmetrical_eyes=False, display
         else:
             eyes = [left_iris.x, left_iris.y, 0] * 2
 
-        # ========================================
-        # Custom landmark-based expression scores
-        # ========================================
+        # # ========================================
+        # # Custom landmark-based expression scores
+        # # ========================================
 
-        # Compute distances
-        lip_distance = np.linalg.norm([
-            landmarks[13].x - landmarks[14].x,
-            landmarks[13].y - landmarks[14].y,
-            landmarks[13].z - landmarks[14].z
-        ])
+        # # Compute distances
+        # lip_distance = np.linalg.norm([
+        #     landmarks[13].x - landmarks[14].x,
+        #     landmarks[13].y - landmarks[14].y,
+        #     landmarks[13].z - landmarks[14].z
+        # ])
 
-        lip_width = np.linalg.norm([
-            landmarks[61].x - landmarks[291].x,
-            landmarks[61].y - landmarks[291].y,
-            landmarks[61].z - landmarks[291].z
-        ])
+        # lip_width = np.linalg.norm([
+        #     landmarks[61].x - landmarks[291].x,
+        #     landmarks[61].y - landmarks[291].y,
+        #     landmarks[61].z - landmarks[291].z
+        # ])
 
-        nostril_distance = np.linalg.norm([
-            landmarks[98].x - landmarks[327].x,
-            landmarks[98].y - landmarks[327].y,
-            landmarks[98].z - landmarks[327].z
-        ])
+        # nostril_distance = np.linalg.norm([
+        #     landmarks[98].x - landmarks[327].x,
+        #     landmarks[98].y - landmarks[327].y,
+        #     landmarks[98].z - landmarks[327].z
+        # ])
 
-        # Optionally auto-capture neutral values
-        if not neutral_captured:
-            neutral_lip_width = lip_width
-            neutral_nostril_distance = nostril_distance
-            neutral_captured = True
+        # # Optionally auto-capture neutral values
+        # if not neutral_captured:
+        #     neutral_lip_width = lip_width
+        #     neutral_nostril_distance = nostril_distance
+        #     neutral_captured = True
 
-        # Normalize
-        mouth_closed_score = 1.0 - min(lip_distance / max_mouth_open_distance, 1.0)
-        mouth_pucker_score = 1.0 - min(lip_width / neutral_lip_width, 1.0)
-        nose_sneer_score = min(nostril_distance / neutral_nostril_distance, 1.0)
+        # # Normalize
+        # mouth_closed_score = 1.0 - min(lip_distance / max_mouth_open_distance, 1.0)
+        # mouth_pucker_score = 1.0 - min(lip_width / neutral_lip_width, 1.0)
+        # nose_sneer_score = min(nostril_distance / neutral_nostril_distance, 1.0)
 
-        # Overwrite the correct indices
-        blendshape_scores_sorted[14] = f"{mouth_closed_score:.8f}"
-        blendshape_scores_sorted[36] = f"{mouth_pucker_score:.8f}"
-        blendshape_scores_sorted[29] = f"{nose_sneer_score:.8f}"
-        blendshape_scores_sorted[30] = f"{nose_sneer_score:.8f}"
+        # # Overwrite the correct indices
+        # blendshape_scores_sorted[14] = f"{mouth_closed_score:.8f}"
+        # blendshape_scores_sorted[36] = f"{mouth_pucker_score:.8f}"
+        # blendshape_scores_sorted[29] = f"{nose_sneer_score:.8f}"
+        # blendshape_scores_sorted[30] = f"{nose_sneer_score:.8f}"
 
         write_blendshape_row(
             writer,

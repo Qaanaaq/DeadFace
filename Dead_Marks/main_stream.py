@@ -57,9 +57,10 @@ load_neutral_pose()
 
 
 class CameraStreamRunner:
-    def __init__(self, udp_address="127.0.0.1", udp_port=11111):
+    def __init__(self, udp_address="127.0.0.1", udp_port=11111, source=0):
         self.udp_address = udp_address
-        self.udp_port = udp_port
+        self.udp_port = udp_port        
+        self.source = source # Store the source
         self.running = False
         self.filter = None   # Will hold Kalman filter
         self.filter_strength = 0.0  # 0 = no filter, 1 = max smoothing
@@ -109,7 +110,26 @@ class CameraStreamRunner:
         global previous_blendshapes
 
         self.running = True
-        cap = cv2.VideoCapture(0)
+
+
+        # --- NEW LOGIC: SOCKET VS WEBCAM ---
+        sock_stream = None
+        cap = None
+
+        if isinstance(self.source, str) and "udp" in self.source:
+            # Extract port from "udp://@:5001" or similar
+            try:
+                port = int(self.source.split(":")[-1])
+                sock_stream = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock_stream.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+                sock_stream.bind(("0.0.0.0", port))
+                sock_stream.settimeout(1.0)
+                print(f"Tracking engine listening on UDP port {port}")
+            except Exception as e:
+                print(f"Socket setup error: {e}")
+                return
+        else:
+            cap = cv2.VideoCapture(self.source)
 
         py_face = PyLiveLinkFace()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -141,9 +161,23 @@ class CameraStreamRunner:
 
         with FaceLandmarker.create_from_options(options) as landmarker:
             while self.running:
-                ret, frame = cap.read()
-                if not ret:
-                    continue
+
+
+                # GET FRAME
+                if sock_stream:
+                    try:
+                        packet, _ = sock_stream.recvfrom(65535)
+                        frame = cv2.imdecode(np.frombuffer(packet, dtype=np.uint8), cv2.IMREAD_COLOR)
+                        if frame is not None:
+                            # --- ROTATE BEFORE TRACKING ---
+                            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                        else:
+                            continue
+                    except socket.timeout:
+                        continue
+                else:
+                    ret, frame = cap.read()
+                    if not ret: continue
 
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
@@ -221,6 +255,10 @@ class CameraStreamRunner:
 
                         # --- Iris tracking (left eye only) ---
                         left_iris = landmarks[468]  # Mediapipe Face Mesh iris landmark
+
+                        # Flip X so eye motion matches what you *see* in the video/head
+                        eye_x = 1.0 - left_iris.x
+                        eye_y = left_iris.y
                         # Map to eye slots: X/Y normalized, Z always 0
                         eye_data = [
                             left_iris.x, left_iris.y, 0,  # eyeLeftX, eyeLeftY, eyeLeftZ
@@ -242,12 +280,14 @@ class CameraStreamRunner:
                         py_face.set_blendshape(FaceBlendShape(52), yaw)
                         py_face.set_blendshape(FaceBlendShape(53), pitch)
                         py_face.set_blendshape(FaceBlendShape(54), roll)
-                        py_face.set_blendshape(FaceBlendShape(55), left_iris.x)  # eyeLeftX
-                        py_face.set_blendshape(FaceBlendShape(56), left_iris.y)  # eyeLeftY
-                        py_face.set_blendshape(FaceBlendShape(57), 0)            # eyeLeftZ (unused)
-                        py_face.set_blendshape(FaceBlendShape(58), left_iris.x)  # eyeRightX (mirrored)
-                        py_face.set_blendshape(FaceBlendShape(59), left_iris.y)  # eyeRightY (mirrored)
-                        py_face.set_blendshape(FaceBlendShape(60), 0)    
+                        
+                        py_face.set_blendshape(FaceBlendShape(55), eye_x)  # eyeLeftX
+                        py_face.set_blendshape(FaceBlendShape(56), eye_y)  # eyeLeftY
+                        py_face.set_blendshape(FaceBlendShape(57), 0)
+
+                        py_face.set_blendshape(FaceBlendShape(58), eye_x)  # eyeRightX
+                        py_face.set_blendshape(FaceBlendShape(59), eye_y)  # eyeRightY
+                        py_face.set_blendshape(FaceBlendShape(60), 0)   
 
                                        
 
@@ -394,13 +434,13 @@ def draw_landmarks_on_image(rgb_image, detection_result, override_blendshape_dic
             for lm in landmarks
         ])
 
-        # mp.solutions.drawing_utils.draw_landmarks(
-        #     image=annotated,
-        #     landmark_list=face_landmarks_proto,
-        #     connections=mp.solutions.face_mesh.FACEMESH_TESSELATION,
-        #     landmark_drawing_spec=None,
-        #     connection_drawing_spec=mp.solutions.drawing_styles.get_default_face_mesh_tesselation_style()
-        # )
+        mp.solutions.drawing_utils.draw_landmarks(
+            image=annotated,
+            landmark_list=face_landmarks_proto,
+            connections=mp.solutions.face_mesh.FACEMESH_TESSELATION,
+            landmark_drawing_spec=None,
+            connection_drawing_spec=mp.solutions.drawing_styles.get_default_face_mesh_tesselation_style()
+        )
 
         mp.solutions.drawing_utils.draw_landmarks(
             image=annotated,

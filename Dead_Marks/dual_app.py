@@ -92,7 +92,7 @@ class DualApp:
             self.root.geometry("340x320")  # accommodates 320x280 plus small padding
             self.root.resizable(False, False)
         self.root.title("Dual Mode Face Tracker")
-        self.root.geometry("900x800")
+        self.root.geometry("900x900")
         self.root.resizable(False, False)
 
         self.mode = ctk.StringVar(value="video")
@@ -101,6 +101,32 @@ class DualApp:
 
         mode_frame = ctk.CTkFrame(root, border_width=0, fg_color="transparent")
         mode_frame.pack(pady=10)
+
+        # --- Inside setup_full_ui in dual_app.py ---
+
+        # Stream Frame
+        self.stream_frame = ctk.CTkFrame(root, fg_color="transparent", corner_radius=0, border_width=0)
+
+        # --- NEW SOURCE SELECTION ROW ---
+        source_frame = ctk.CTkFrame(self.stream_frame, fg_color="transparent", corner_radius=0, border_width=0)
+        source_frame.pack(pady=5, fill="x")
+
+        self.stream_source = ctk.StringVar(value="webcam")
+
+        ctk.CTkLabel(source_frame, text="Source:").pack(side="left", padx=5)
+        ctk.CTkRadioButton(source_frame, text="Local Webcam", variable=self.stream_source, 
+                        value="webcam", fg_color="#84ecf0").pack(side="left", padx=5)
+        ctk.CTkRadioButton(source_frame, text="In-Stream (Pi)", variable=self.stream_source, 
+                        value="instream", fg_color="#84ecf0").pack(side="left", padx=5)
+
+        # --- NEW PI STREAM URL INPUT ---
+        pi_url_frame = ctk.CTkFrame(self.stream_frame, fg_color="transparent", corner_radius=0, border_width=0)
+        pi_url_frame.pack(pady=2, fill="x")
+
+        ctk.CTkLabel(pi_url_frame, text="Pi Stream UDP:").pack(side="left", padx=5)
+        self.pi_url_entry = ctk.CTkEntry(pi_url_frame, placeholder_text="udp://@:5001")
+        self.pi_url_entry.insert(0, "udp://@:5001")
+        self.pi_url_entry.pack(side="left", fill="x", expand=True, padx=5)
 
 
 
@@ -206,9 +232,6 @@ class DualApp:
 
 
 
-        # Stream Frame
-        self.stream_frame = ctk.CTkFrame(root, fg_color="transparent", corner_radius=0, border_width=0)
-
         # Buttons side by side
         stream_buttons_frame = ctk.CTkFrame(self.stream_frame, fg_color="transparent", corner_radius=0, border_width=0)
         stream_buttons_frame.pack(pady=5)
@@ -227,6 +250,10 @@ class DualApp:
             command=self.toggle_streaming
         )
         self.toggle_stream_button.pack(side="left", padx=5)
+
+
+
+        
 
         # Neutral Pose Button
         self.neutral_pose_button = ctk.CTkButton(
@@ -826,25 +853,101 @@ class DualApp:
         reload_neutral_pose()
         self.display_message("Neutral pose saved and applied.")
 
+    def run_socket_camera(self):
+            import socket
+            # Get port from your entry box (e.g., 5001)
+            port = int(self.pi_url_entry.get().split(":")[-1]) 
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+            sock.settimeout(1.0) # Don't hang forever
+            try:
+                sock.bind(("0.0.0.0", port))
+            except:
+                pass # Already bound
+
+            while self.running_camera:
+                try:
+                    packet, _ = sock.recvfrom(65535)
+                    nparr = np.frombuffer(packet, dtype=np.uint8)
+                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                    
+                    if frame is not None:
+                        # Send frame to UI Canvas
+                        self.root.after(0, lambda f=frame: self.update_canvas_frame(f))
+                except socket.timeout:
+                    continue
+                except Exception as e:
+                    print(f"Socket Error: {e}")
+                    break
+            
+            sock.close()
+            self.running_camera = False
+            self.root.after(0, lambda: self.test_cam_button.configure(text="Test Cam"))
+
+
     def toggle_camera(self):
         if self.running_camera:
             self.running_camera = False
-            self.test_cam_button.configure(text="Test Cam", width=75)
+            self.test_cam_button.configure(text="Test Cam")
         else:
             self.running_camera = True
-            self.test_cam_button.configure(text="Stop Cam", width=75)
-            self.cap = cv2.VideoCapture(0)
-            threading.Thread(target=self.camera_loop, daemon=True).start()
+            self.test_cam_button.configure(text="Stop Cam")
+            
+            def start_capture_thread():
+                if self.stream_source.get() == "instream":
+                    # RAW SOCKET METHOD (Same as your test_cam.py)
+                    import socket
+                    port_str = self.pi_url_entry.get().split(":")[-1]
+                    port = int(port_str) if port_str.isdigit() else 5001
+                    
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+                    try:
+                        sock.bind(("0.0.0.0", port))
+                        sock.settimeout(1.0)
+                        while self.running_camera:
+                            try:
+                                packet, _ = sock.recvfrom(65535)
+                                frame = cv2.imdecode(np.frombuffer(packet, dtype=np.uint8), cv2.IMREAD_COLOR)
+                                if frame is not None:
+                                    # Use ROTATE_90_COUNTERCLOCKWISE
+                                    frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                                    self.root.after(0, lambda f=frame: self.update_canvas_frame(f))
+                            except socket.timeout:
+                                continue
+                    except Exception as e:
+                        print(f"Socket Error: {e}")
+                    finally:
+                        sock.close()
+                else:
+                    # WEBCAM METHOD
+                    self.cap = cv2.VideoCapture(0)
+                    while self.running_camera and self.cap.isOpened():
+                        ret, frame = self.cap.read()
+                        if ret:
+                            self.root.after(0, lambda f=frame: self.update_canvas_frame(f))
+                    self.cap.release()
+
+                self.running_camera = False
+                self.root.after(0, lambda: self.test_cam_button.configure(text="Test Cam"))
+
+            threading.Thread(target=start_capture_thread, daemon=True).start()
 
     def camera_loop(self):
         while self.running_camera and self.cap.isOpened():
             ret, frame = self.cap.read()
             if ret:
+                # Update the existing canvas with the new frame
                 self.root.after(0, lambda f=frame: self.update_canvas_frame(f))
             else:
+                # If stream drops, stop the loop
                 break
+        
         self.cap.release()
-        self.test_cam_button.configure(text="Test Cam", width=75)
+        self.running_camera = False
+        # Reset button text in the main thread
+        self.root.after(0, lambda: self.test_cam_button.configure(text="Test Cam", width=75))
 
     def zero_neutral_pose(self):
         """Reset neutral_pose.json to all zeros and reload into stream."""
@@ -956,10 +1059,25 @@ class DualApp:
                 self.toggle_stream_button.configure(text="Start Streaming")
                 self.display_message("Streaming stopped")
             else:
+                # 1. GRAB THE VALUES FROM YOUR NEW UI ELEMENTS HERE
                 udp_address = self.udp_entry.get()
                 udp_port = int(self.port_entry.get())
+                
+                # Check if we should use Webcam or Pi
+                source_mode = self.stream_source.get() # From the radio button
+                if source_mode == "instream":
+                    chosen_source = self.pi_url_entry.get() # e.g., "udp://@:5001"
+                else:
+                    chosen_source = 0 # Local Webcam index
+                
                 self.running_stream = True
-                self.stream_runner = CameraStreamRunner(udp_address, udp_port)
+
+                # 2. PASS THE CHOSEN SOURCE TO THE RUNNER
+                self.stream_runner = CameraStreamRunner(
+                    udp_address, 
+                    udp_port, 
+                    source=chosen_source
+                )
 
                 def update_safe(frame_bgr):
                     if not self.running_stream:

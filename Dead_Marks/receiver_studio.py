@@ -32,7 +32,8 @@ STREAMS = [
     },
 ]
 
-FORWARD_IP = "127.0.0.1"  # where to forward to (usually localhost)
+# Default forward IP (per-stream can be changed in the UI)
+FORWARD_IP_DEFAULT = "127.0.0.1"
 
 # ----------------------------------------
 
@@ -41,13 +42,14 @@ class StreamRelay:
     """
     One relay:
       - listens on listen_port for UDP packets
-      - optionally forwards them to FORWARD_IP:forward_port
+      - optionally forwards them to forward_ip:forward_port
     """
 
-    def __init__(self, name, listen_port, forward_port):
+    def __init__(self, name, listen_port, forward_port, forward_ip):
         self.name = name
         self.listen_port = listen_port
         self.forward_port = forward_port
+        self.forward_ip = forward_ip
 
         self.forward_enabled = False
         self.running = True
@@ -67,7 +69,7 @@ class StreamRelay:
     def _loop(self):
         print(
             f"[{self.name}] Listening on UDP port {self.listen_port}, "
-            f"forwarding to {FORWARD_IP}:{self.forward_port}"
+            f"forwarding to {self.forward_ip}:{self.forward_port}"
         )
         while self.running:
             try:
@@ -83,7 +85,7 @@ class StreamRelay:
             # Forward only if enabled
             if self.forward_enabled:
                 try:
-                    self.sock_out.sendto(data, (FORWARD_IP, self.forward_port))
+                    self.sock_out.sendto(data, (self.forward_ip, self.forward_port))
                 except Exception as e:
                     print(f"[{self.name}] forward error:", repr(e))
 
@@ -104,6 +106,12 @@ class StreamRelay:
         self.forward_enabled = enabled
         print(f"[{self.name}] Forwarding set to {enabled}")
 
+    def update_forward_target(self, ip: str, port: int):
+        """Update where this relay forwards packets."""
+        self.forward_ip = ip
+        self.forward_port = port
+        print(f"[{self.name}] Forward target set to {self.forward_ip}:{self.forward_port}")
+
     def stop(self):
         self.running = False
         try:
@@ -120,7 +128,8 @@ class ReceiverStudioApp:
     def __init__(self, root: ctk.CTk):
         self.root = root
         self.root.title("Receiver Studio – DeadFace RPi Streams")
-        self.root.geometry("1000x540")
+        # Slightly wider to fit the new fields
+        self.root.geometry("1100x650")
         self.root.resizable(False, False)
 
         # layout: 2 columns → controls | canvas
@@ -129,7 +138,9 @@ class ReceiverStudioApp:
         self.root.grid_rowconfigure(0, weight=1)
 
         self.relays = []
-        self.buttons = {}
+        self.controls = {}  # per-stream UI elements
+        # mutable copy of configs (in case you want to tweak snapshot URLs later)
+        self.stream_configs = [dict(s) for s in STREAMS]
 
         # Shared snapshot canvas (right side)
         self.canvas = ctk.CTkCanvas(
@@ -154,7 +165,7 @@ class ReceiverStudioApp:
         )
         title_label.grid(row=0, column=0, padx=5, pady=(10, 10), sticky="w")
 
-        for idx, stream in enumerate(STREAMS):
+        for idx, stream in enumerate(self.stream_configs):
             row = idx + 1
 
             frame = ctk.CTkFrame(control_frame, corner_radius=8)
@@ -170,39 +181,84 @@ class ReceiverStudioApp:
             )
             label.grid(row=0, column=0, columnspan=2, padx=8, pady=(6, 2), sticky="w")
 
+            # --- Forward target controls (IP + port) ---
+
+            ip_label = ctk.CTkLabel(frame, text="Forward IP:", anchor="w")
+            ip_label.grid(row=1, column=0, padx=6, pady=(2, 0), sticky="w")
+
+            ip_entry = ctk.CTkEntry(frame)
+            ip_entry.insert(0, FORWARD_IP_DEFAULT)
+            ip_entry.grid(row=1, column=1, padx=6, pady=(2, 0), sticky="ew")
+
+            port_label = ctk.CTkLabel(frame, text="Forward port:", anchor="w")
+            port_label.grid(row=2, column=0, padx=6, pady=(2, 0), sticky="w")
+
+            port_entry = ctk.CTkEntry(frame)
+            port_entry.insert(0, str(stream["forward_port"]))
+            port_entry.grid(row=2, column=1, padx=6, pady=(2, 0), sticky="ew")
+
+            # --- Start/stop + snapshot buttons ---
+
             start_stop_btn = ctk.CTkButton(
                 frame,
                 text="START FORWARD",
                 command=lambda i=idx: self.toggle_forward(i),
             )
-            start_stop_btn.grid(row=1, column=0, padx=6, pady=6, sticky="ew")
+            start_stop_btn.grid(row=3, column=0, padx=6, pady=(8, 6), sticky="ew")
 
             snapshot_btn = ctk.CTkButton(
                 frame,
                 text="SNAPSHOT",
                 command=lambda i=idx: self.take_snapshot(i),
             )
-            snapshot_btn.grid(row=1, column=1, padx=6, pady=6, sticky="ew")
+            snapshot_btn.grid(row=3, column=1, padx=6, pady=(8, 6), sticky="ew")
 
-            self.buttons[idx] = {
+            # Apply button to update forward IP/port
+            apply_btn = ctk.CTkButton(
+                frame,
+                text="Apply IP/Port",
+                command=lambda i=idx: self.apply_forward_settings(i),
+            )
+            apply_btn.grid(row=4, column=0, columnspan=2, padx=6, pady=(0, 8), sticky="ew")
+
+            self.controls[idx] = {
                 "start_stop": start_stop_btn,
+                "ip_entry": ip_entry,
+                "port_entry": port_entry,
             }
 
-        # Create relays
-        for stream in STREAMS:
+        # Create relays with default IP/ports
+        for stream in self.stream_configs:
             relay = StreamRelay(
                 name=stream["name"],
                 listen_port=stream["listen_port"],
                 forward_port=stream["forward_port"],
+                forward_ip=FORWARD_IP_DEFAULT,
             )
             self.relays.append(relay)
 
         # Clean shutdown
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
+    def apply_forward_settings(self, index: int):
+        """Read IP + port from the UI and apply to the relay."""
+        relay = self.relays[index]
+        ctrl = self.controls[index]
+
+        ip = ctrl["ip_entry"].get().strip() or FORWARD_IP_DEFAULT
+        port_text = ctrl["port_entry"].get().strip()
+
+        try:
+            port = int(port_text)
+        except ValueError:
+            print(f"[{relay.name}] Invalid port: {port_text!r}")
+            return
+
+        relay.update_forward_target(ip, port)
+
     def toggle_forward(self, index: int):
         relay = self.relays[index]
-        btn = self.buttons[index]["start_stop"]
+        btn = self.controls[index]["start_stop"]
 
         if relay.forward_enabled:
             relay.set_forwarding(False)
@@ -217,7 +273,7 @@ class ReceiverStudioApp:
         Assumes the Pi exposes an HTTP endpoint returning a JPEG, like:
             http://PI_IP:8000/snapshot.jpg
         """
-        url = STREAMS[index]["pi_snapshot_url"]
+        url = self.stream_configs[index]["pi_snapshot_url"]
         print(f"[SNAPSHOT] Requesting image from {url} ...")
 
         def worker():
