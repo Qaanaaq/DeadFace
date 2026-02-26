@@ -16,17 +16,23 @@ a = Analysis(
     ['Dead_Marks/dual_app.py'],
     pathex=['.'],
     binaries=[],
-    datas=datas,
+    datas=[
+        ('Dead_Marks/DeadFace.task', '.'),
+        ('Dead_Marks/multipliers.json', '.'),
+        ('Dead_Marks/sky_dark_theme.json', '.'),
+        ('Dead_Marks/neutral_pose.json', '.'),
+        ('Dead_Marks/deadface.png', '.'),
+    ],
     hiddenimports=[
-        'mediapipe',
-        'mediapipe.python',
-        'mediapipe.python.solutions',
         'mediapipe.python.solutions.face_mesh',
-        'mediapipe.framework.formats.landmark_pb2',  # Critical for landmark data
-        'mediapipe.tasks',
-        'mediapipe.tasks.python',
+        'mediapipe.python.solutions.face_detection',
+        'mediapipe.python.solutions.drawing_utils',
+        'mediapipe.framework.formats.landmark_pb2',
         'mediapipe.tasks.python.vision',
-        'transforms3d'
+        'transforms3d',
+        'numpy',
+        'main',
+        'main_stream'
     ],
     hookspath=[],
     hooksconfig={},
