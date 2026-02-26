@@ -1,5 +1,5 @@
 mediapipe>=0.10.14
-numpy
+numpy==1.26.2
 opencv-python
 transforms3d
 timecode
