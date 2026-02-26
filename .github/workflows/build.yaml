@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Force the exact versions simultaneously so pip can't "drift" to NumPy 2.x
+          # Force every single dependency into one command to ensure harmony
           pip install --no-cache-dir \
             "pyinstaller==5.13.0" \
             "numpy==1.26.2" \
@@ -44,7 +44,12 @@ jobs:
             "protobuf<4" \
             "jax<0.4.20" \
             "jaxlib<0.4.20" \
-            "transforms3d"          
+            "customtkinter" \
+            "opencv-python" \
+            "transforms3d" \
+            "timecode" \
+            "requests" \
+            "Pillow"        
           # Bash syntax for checking if requirements.txt exists
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
