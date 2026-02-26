@@ -35,10 +35,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r Dead_Marks/requirements.txt
+          python -m pip install --upgrade pip          
           # LOCKING TO YOUR WORKING LOCAL VERSION
           pip install pyinstaller==5.13.0 
+          pip install "numpy<2.0.0"
+          pip install mediapipe==0.10.14          
+          pip install transforms3d
+          pip install -r Dead_Marks/requirements.txt
         shell: bash
 
       - name: Build with PyInstaller
