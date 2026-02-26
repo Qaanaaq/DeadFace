@@ -17,7 +17,17 @@ a = Analysis(
     pathex=['.'],
     binaries=[],
     datas=datas,
-    hiddenimports=[],
+    hiddenimports=[
+        'mediapipe',
+        'mediapipe.python',
+        'mediapipe.python.solutions',
+        'mediapipe.python.solutions.face_mesh',
+        'mediapipe.framework.formats.landmark_pb2',  # Critical for landmark data
+        'mediapipe.tasks',
+        'mediapipe.tasks.python',
+        'mediapipe.tasks.python.vision',
+        'transforms3d'
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
