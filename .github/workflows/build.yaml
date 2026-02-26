@@ -45,8 +45,10 @@ jobs:
             "jax<0.4.20" \
             "jaxlib<0.4.20" \
             "transforms3d"          
-          # Install the rest from requirements
-          if (Test-Path Dead_Marks/requirements.txt) { pip install -r Dead_Marks/requirements.txt }
+          # Bash syntax for checking if requirements.txt exists
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
         shell: bash
 
       - name: Build with PyInstaller
