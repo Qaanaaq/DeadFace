@@ -9,7 +9,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: write   # required so the release job can create GitHub releases
+  contents: write
 
 jobs:
   build:
@@ -37,47 +37,28 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r Dead_Marks/requirements.txt
-          pip install pyinstaller
+          # LOCKING TO YOUR WORKING LOCAL VERSION
+          pip install pyinstaller==5.13.0 
+        shell: bash
 
       - name: Build with PyInstaller
-        run: pyinstaller DeadFace.spec
+        # Added --clean to ensure no cache interference between runs
+        run: pyinstaller --noconfirm --clean DeadFace.spec
 
-      # Windows-only: move data files out of _internal so they sit next to DeadFace.exe
-      - name: Fix Windows data layout
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $base = "dist/DeadFace"
-          $internal = Join-Path $base "_internal"
-          $files = @(
-            "DeadFace.task",
-            "sky_dark_theme.json",
-            "multipliers.json",
-            "neutral_pose.json",
-            "deadface.png",
-            "deadface.ico",
-            "Commands.txt"
-          )
-          foreach ($f in $files) {
-            $src = Join-Path $internal $f
-            $dst = Join-Path $base $f
-            if (Test-Path $src) {
-              Copy-Item $src $dst -Force
-            }
-          }
+      # --- PACKAGING ---
+      # 'Fix Windows data layout' was REMOVED because PyInstaller 5.13 
+      # puts data in the root by default, not in _internal.
 
-      # Zip artifacts on Linux & macOS using `zip`
       - name: Package zip (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
           cd dist
-          zip -r DeadFace_${{ matrix.label }}.zip DeadFace
+          zip -r DeadFace_${{ matrix.label }}.zip DeadFace/
 
-      # Zip artifact on Windows using PowerShell's Compress-Archive
       - name: Package zip (Windows)
         if: runner.os == 'Windows'
         run: |
-          powershell -Command "Compress-Archive -Path 'dist/DeadFace' -DestinationPath 'dist/DeadFace_${{ matrix.label }}.zip'"
+          powershell -Command "Compress-Archive -Path 'dist/DeadFace/*' -DestinationPath 'dist/DeadFace_${{ matrix.label }}.zip'"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -89,18 +70,14 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: List downloaded files
-        run: ls -R artifacts
-
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: artifacts/**/*.zip
           token: ${{ secrets.GITHUB_TOKEN }}
