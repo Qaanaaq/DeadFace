@@ -268,7 +268,7 @@ class CameraStreamRunner:
                         # Compute pose rotation
                         pose_matrix, _, _, _ = calculate_rotation(landmarks, pcf, mp_image)
                         eul = transforms3d.euler.mat2euler(pose_matrix)
-                        pitch, yaw, roll = eul[0] + 0.3, -eul[1], eul[2]
+                        pitch, yaw, roll = -eul[0] + 0.3, -eul[1], eul[2]
 
                         # Apply smoothing to head rotation if filter is enabled
                         if self.rotation_filter:
